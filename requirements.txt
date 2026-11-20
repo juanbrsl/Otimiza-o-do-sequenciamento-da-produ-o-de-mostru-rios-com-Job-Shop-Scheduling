@@ -1,0 +1,6 @@
+numpy
+pandas
+matplotlib
+ortools
+scheptk
+pytest

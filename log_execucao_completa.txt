@@ -1,0 +1,138 @@
+
+== Benchmarks (ft06, ft10, ta01) ==
+instancia n_x_m  otimo_conhecido cpsat_status  cpsat_cmax  cpsat_s  tabu_melhor  tabu_media  tabu_gap_%
+     ft06   6x6               55      OPTIMAL          55      0.0           55        55.0        0.00
+     ft10 10x10              930      OPTIMAL         930      2.4          967       968.7        3.98
+     ta01 15x15             1231      OPTIMAL        1231      5.5         1293      1318.9        5.04
+
+== Calibração da Busca Tabu ==
+ tenure  vizinhos  arpd
+      3         0 2.892
+      3         2 2.380
+      3         5 2.018
+      5         0 2.888
+      5         2 1.718
+      5         5 1.939
+     10         0 2.497
+     10         2 1.998
+     10         5 1.171
+     20         0 1.877
+     20         2 2.066
+     20         5 0.838 
+melhor: {'tenure': 20, 'n_neighbors': 5}
+
+== Comparação de métodos ==
+  CP-SAT n10_i0: OPTIMAL 3095 (0.5s)
+  CP-SAT n10_i1: OPTIMAL 3853 (0.1s)
+  CP-SAT n10_i2: OPTIMAL 2261 (0.0s)
+  CP-SAT n10_i3: OPTIMAL 2663 (0.1s)
+  CP-SAT n10_i4: OPTIMAL 2315 (0.0s)
+  CP-SAT n10_i5: OPTIMAL 2711 (0.2s)
+  CP-SAT n10_i6: OPTIMAL 1602 (0.6s)
+  CP-SAT n10_i7: OPTIMAL 1395 (0.2s)
+  CP-SAT n10_i8: OPTIMAL 1908 (0.6s)
+  CP-SAT n10_i9: OPTIMAL 2633 (0.0s)
+  CP-SAT n15_i0: OPTIMAL 4135 (20.4s)
+  CP-SAT n15_i1: OPTIMAL 3602 (2.0s)
+  CP-SAT n15_i2: OPTIMAL 4934 (0.1s)
+  CP-SAT n15_i3: FEASIBLE 2952 (30.0s)
+  CP-SAT n15_i4: FEASIBLE 3024 (30.1s)
+  CP-SAT n15_i5: FEASIBLE 4055 (30.0s)
+  CP-SAT n15_i6: FEASIBLE 3371 (30.1s)
+  CP-SAT n15_i7: OPTIMAL 4023 (24.7s)
+  CP-SAT n15_i8: FEASIBLE 2142 (30.1s)
+  CP-SAT n15_i9: OPTIMAL 2455 (1.3s)
+  CP-SAT n20_i0: OPTIMAL 6239 (1.0s)
+  CP-SAT n20_i1: FEASIBLE 4241 (30.0s)
+  CP-SAT n20_i2: FEASIBLE 5009 (30.0s)
+  CP-SAT n20_i3: FEASIBLE 4147 (30.1s)
+  CP-SAT n20_i4: OPTIMAL 4288 (0.6s)
+  CP-SAT n20_i5: OPTIMAL 4475 (0.6s)
+  CP-SAT n20_i6: OPTIMAL 4758 (1.7s)
+  CP-SAT n20_i7: OPTIMAL 3676 (1.2s)
+  CP-SAT n20_i8: FEASIBLE 4376 (30.0s)
+  CP-SAT n20_i9: FEASIBLE 5145 (30.0s)
+  CP-SAT n25_i0: FEASIBLE 5472 (30.1s)
+  CP-SAT n25_i1: OPTIMAL 6605 (4.4s)
+  CP-SAT n25_i2: OPTIMAL 5776 (7.1s)
+  CP-SAT n25_i3: FEASIBLE 6425 (30.1s)
+  CP-SAT n25_i4: OPTIMAL 5609 (5.9s)
+  CP-SAT n25_i5: OPTIMAL 5535 (5.7s)
+  CP-SAT n25_i6: OPTIMAL 5020 (11.6s)
+  CP-SAT n25_i7: OPTIMAL 5153 (2.8s)
+  CP-SAT n25_i8: OPTIMAL 4758 (3.1s)
+  CP-SAT n25_i9: OPTIMAL 5033 (3.6s)
+  CP-SAT n30_i0: FEASIBLE 6907 (30.0s)
+  CP-SAT n30_i1: OPTIMAL 7918 (8.0s)
+  CP-SAT n30_i2: OPTIMAL 5997 (3.2s)
+  CP-SAT n30_i3: OPTIMAL 6341 (18.8s)
+  CP-SAT n30_i4: OPTIMAL 6514 (10.0s)
+  CP-SAT n30_i5: OPTIMAL 6803 (1.6s)
+  CP-SAT n30_i6: OPTIMAL 7070 (8.1s)
+  CP-SAT n30_i7: OPTIMAL 5716 (1.2s)
+  CP-SAT n30_i8: OPTIMAL 7514 (2.7s)
+  CP-SAT n30_i9: OPTIMAL 7209 (3.3s)
+ n   method  cmax_medio  cmax_dp  cmax_melhor  cmax_pior  arpd_medio  sum_tj_medio
+10      EDD     2723.00   765.11         1567       4158       11.85          0.00
+10     FIFO     2723.00   765.11         1567       4158       11.85          0.00
+10     MWKR     2844.60   865.83         1740       4689       16.74        753.90
+10       SA     2477.78   698.36         1399       3925        1.40        139.98
+10      SPT     2711.10   788.90         1542       4287       11.10         15.60
+10     Tabu     2480.00   699.68         1399       3919        1.48         50.52
+10 Tabu-ale     2474.83   695.81         1402       3925        1.31         72.28
+15      EDD     3974.50   998.00         2302       5422       14.31        147.50
+15     FIFO     3974.50   998.00         2302       5422       14.31        147.50
+15     MWKR     4240.50  1020.77         2745       5893       22.41       3340.60
+15       SA     3564.42   809.20         2157       5031        2.88        505.83
+15      SPT     3879.60   930.84         2372       5238       12.02        491.60
+15     Tabu     3579.03   812.02         2157       5028        3.30        259.62
+15 Tabu-ale     3574.85   807.94         2157       4966        3.20        203.83
+20      EDD     5265.00   859.66         3963       6852       13.51       1678.60
+20     FIFO     5265.00   859.66         3963       6852       13.51       1678.60
+20     MWKR     5570.20   804.59         4264       7103       20.30      12619.20
+20       SA     4790.08   672.22         3753       6366        3.41       3951.88
+20      SPT     5017.00   788.68         3990       6821        8.20       2211.70
+20     Tabu     4796.85   683.25         3816       6529        3.52       1845.62
+20 Tabu-ale     4784.63   686.66         3779       6456        3.25       1756.17
+25      EDD     6201.20   776.69         5234       7704       11.85       6185.00
+25     FIFO     6201.20   776.69         5234       7704       11.85       6185.00
+25     MWKR     6836.10   752.34         5732       8040       23.45      33753.70
+25       SA     5711.94   586.74         4818       6868        3.14       8180.89
+25      SPT     5858.90   595.37         5103       6868        5.86       3584.60
+25     Tabu     5741.73   576.78         4895       6827        3.70       3344.84
+25 Tabu-ale     5749.91   593.50         4834       6867        3.82       3678.29
+30      EDD     7439.00   767.46         6157       8550        9.40      17377.50
+30     FIFO     7439.00   767.46         6157       8550        9.40      17377.50
+30     MWKR     8112.40   939.07         6507       9704       19.17      64886.80
+30       SA     6955.40   666.96         5717       8238        2.29      24244.04
+30      SPT     7122.00   628.30         6272       8238        4.87       9177.80
+30     Tabu     7024.75   636.06         5851       8145        3.36       8694.86
+30 Tabu-ale     7009.88   674.53         5725       8211        3.09       9167.96
+ n  otimas  total  gap_medio_pct  tempo_medio_s
+10      10     10           0.00           0.24
+15       5     10           1.49          19.87
+20       5     10           0.18          15.53
+25       8     10           0.12          10.43
+30       9     10           0.00           8.68
+
+== Sensibilidade ==
+    variante  fifo_cmax  tabu_cmax  cpsat_cmax  cpsat_otimas  fifo_sum_tj  tabu_sum_tj  ganho_cmax_pct
+        base     6621.4    6307.16      6125.2             2       9208.6      6445.52            4.88
+ tempos -20%     5296.6    5044.52      4929.4             2       1999.4      1916.64            4.91
+ tempos +20%     7945.2    7583.76      7407.8             2      19751.8     11859.20            4.71
+urgentes 10%     6912.4    6523.28      6373.8             3      12361.0      6508.88            5.71
+urgentes 30%     6771.0    6437.52      6282.0             2      10811.0      7344.92            4.90
+Instância caso_base_n25: 25 ordens, 126 operações; backlog 9.4 dias (estação gargalo), limite inferior 4529 min
+CP-SAT: OPTIMAL, Cmax=4588, limite=4588.0, gap=0.00%, 3.4s
+      metodo  cmax  sum_tj  tmax  n_atrasadas  util_media_%  ganho_cmax_%  ganho_sum_tj_%
+FIFO (ANTES)  4925     192   125            2          47.5          0.00            0.00
+         SPT  4818    1205  1187            2          48.6          2.17         -527.60
+         EDD  4925     192   125            2          47.5          0.00            0.00
+        MWKR  5579   12642  3118           13          42.0        -13.28        -6484.38
+          SA  4601    2053  1889            2          50.9          6.58         -969.27
+        Tabu  4620     466   466            1          50.7          6.19         -142.71
+      CP-SAT  4588    2536  2127            2          51.0          6.84        -1220.83
+           mean    std   min   max
+method                            
+SA      4668.80  49.51  4601  4791
+Tabu    4697.07  31.51  4620  4746

@@ -1,0 +1,68 @@
+{
+ "instancia": "caso_base_n25",
+ "carga": {
+  "load_min": [
+   2016,
+   1924,
+   1138,
+   3185,
+   4529,
+   1253
+  ],
+  "backlog_days": 9.435416666666667,
+  "mean_load_days": 4.876736111111112,
+  "lb_cmax": 4529
+ },
+ "params_tabu": {
+  "tenure": 20,
+  "n_neighbors": 5
+ },
+ "orcamento_avaliacoes": 20000,
+ "execucoes": 30,
+ "cpsat": {
+  "status": "OPTIMAL",
+  "cmax": 4588,
+  "bound": 4588.0,
+  "gap_pct": 0.0,
+  "seconds": 3.3783862
+ },
+ "antes": {
+  "cmax": 4925,
+  "sum_tj": 192,
+  "tmax": 125,
+  "n_late": 2,
+  "busy": [
+   2016,
+   1924,
+   1138,
+   3185,
+   4529,
+   1253
+  ],
+  "idle": [
+   2909,
+   3001,
+   3787,
+   1740,
+   396,
+   3672
+  ],
+  "util": [
+   0.4093401015228426,
+   0.3906598984771574,
+   0.23106598984771573,
+   0.6467005076142132,
+   0.9195939086294416,
+   0.25441624365482235
+  ],
+  "util_mean": 0.47529610829103214
+ },
+ "ambiente": {
+  "so": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "nucleos_logicos": 20,
+  "ram_gb": 15.7,
+  "python": "3.14.6",
+  "ortools": "9.15.6755"
+ }
+}

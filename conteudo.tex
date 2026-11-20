@@ -1,0 +1,114 @@
+\section{Definição do problema}
+
+O ambiente em estudo é uma fábrica de mostruários de pequeno porte (tecidos, madeira, couro sintético, kits e itens sob medida), com seis estações de uma máquina cada, em turno único de 480 min/dia: corte (M0), personalização (M1), colagem/prensagem (M2), costura/acabamento (M3), montagem (M4) e conferência/embalagem (M5). Cada ordem é um \textit{job} com roteiro próprio: a família F1 (45\%) visita M0--M5; F2 (25\%), M0, M2, M3, M1, M4, M5; F3 (15\%), M0, M3, M4, M5; e F4 (15\%), M0, M4, M1, M5. Como as ordens pulam etapas e as percorrem em ordens diferentes, trata-se de um \textit{job shop} e não de um \textit{flow shop}.
+
+Cada operação exige uma estação por vez, sem preempção, e respeita a precedência do roteiro. O tempo é $p_{jk} = (a_i + b_i q_j)\,\varepsilon$, com $q_j \in \{15,25,50,100,150\}$ o tamanho do lote, $a_i$ e $b_i$ os tempos fixo e unitário da estação $i$ e $\varepsilon$ um ruído log-normal de 10\%. O prazo é de 10 dias úteis, ou 5 para 20\% das ordens urgentes. Não há \textit{setups} sequenciais nem quebras. As instâncias foram geradas por um gerador parametrizado e reprodutível (semente fixa), com as premissas da \autoref{tab:premissas}; o backlog da estação gargalo (montagem) varia de 2,6 a 16,4 dias úteis nas 50 instâncias.
+
+\begin{table}[htb]
+    \centering
+    \caption{\label{tab:premissas} Premissas do gerador. Tempo = fixo + unitário $\times$ lote (min).}
+    \footnotesize
+    \begin{tabular}{lcccccc}
+        \toprule
+        Estação & M0 & M1 & M2 & M3 & M4 & M5 \\
+        \midrule
+        Fixo / unitário & 20/1,5 & 30/2,0 & 15/1,8 & 10/3,5 & 10/4,0 & 10/1,0 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+A medida de desempenho principal é o \textit{makespan} $C_{\max}$. Reportam-se também a tardança total $\sum T_j$, o número de ordens atrasadas e a utilização por estação; $\sum T_j$ serve de desempate lexicográfico ($C_{\max}$ primeiro). O problema é NP-difícil no sentido forte, já para três estações~\cite{garey1976complexity}, e o espaço de busca de uma instância com $N$ operações tem até $N!/\prod_j |r_j|!$ sequências. O sequenciamento atual é empírico; sem registros da fábrica, ele é representado por uma simulação: cada estação atende sua fila em FIFO, com prioridade a urgentes (ANTES). O DEPOIS é a melhor sequência obtida pelos métodos propostos.
+
+\section{Método proposto}
+
+\textbf{Representação e decodificador.} Uma solução é uma permutação com repetição em que o \textit{job} $j$ aparece $|r_j|$ vezes e a $k$-ésima ocorrência indica sua $k$-ésima operação. O decodificador semi-ativo inicia cada operação assim que o \textit{job} e a estação estão livres, o que respeita as precedências por construção. Como o formato do \texttt{scheptk} exige que todo \textit{job} visite todas as máquinas, foi implementado um decodificador próprio para roteiros variáveis, validado contra o \texttt{scheptk} em instâncias de rota completa (mesmo $C_{\max}$ e $\sum T_j$ em 25 sequências aleatórias).
+
+\textbf{Modelo exato.} O modelo CP-SAT~\cite{ortools} usa uma variável de início $S_{jk}$ e um intervalo de duração $p_{jk}$ por operação:
+\begin{equation}\label{eq:cpsat}
+    \min C_{\max} \quad \text{s.a.} \quad S_{j,k+1} \ge S_{jk} + p_{jk}, \quad \text{NoOverlap}\big(\{[S_{jk}, S_{jk}+p_{jk})\}_{r_{jk}=i}\big)\ \forall i, \quad C_{\max} \ge S_{j,|r_j|}+p_{j,|r_j|}.
+\end{equation}
+O limite de tempo foi de 30 s com 8 \textit{threads}. O \textit{solver} informa o \textit{status} (OPTIMAL ou FEASIBLE) e o melhor limite inferior, do qual se calcula o gap. O título ``ótimo'' só vale onde o \textit{status} foi OPTIMAL.
+
+\textbf{Busca Tabu.} Segue a ideia de Glover~\cite{glover1989tabu1,glover1990tabu2}, com vizinhança baseada no caminho crítico, como em Nowicki e Smutnicki~\cite{nowicki1996fast}: a cada iteração calcula-se o caminho crítico e geram-se vizinhos que invertem a ordem de duas operações consecutivas na mesma estação, mantidas as precedências dos \textit{jobs}; somam-se 5 vizinhos aleatórios (troca ou inserção) para diversificar. A solução corrente move-se sempre para o melhor vizinho admissível, mesmo pior. A lista tabu guarda o atributo ``par de operações na ordem anterior'', com \textit{tenure} 20; a aspiração aceita um vizinho tabu que melhore o melhor global. Após 100 iterações sem melhora, reinicia-se de uma perturbação da melhor solução. A solução inicial é a melhor entre as regras de despacho. A variante \textit{Tabu-ale}, só com vizinhos aleatórios (\textit{tenure} 3, 10 vizinhos), foi mantida como referência.
+
+\textbf{Outros métodos.} O \textit{Simulated Annealing} usa as mesmas vizinhanças aleatórias, resfriamento geométrico e o mesmo ponto de partida e orçamento. As regras de despacho sem espera são FIFO (com urgentes primeiro), SPT, EDD e MWKR (maior trabalho restante)~\cite{pinedo2016scheduling}. EDD coincide com FIFO porque só há dois prazos distintos e os urgentes já passam na frente.
+
+\section{Análise e discussão dos resultados}
+
+\textbf{Configuração experimental.} Os experimentos rodaram em Windows 11, CPU Intel com 20 núcleos lógicos, 15,7 GB de RAM, Python 3.14.6 e OR-Tools 9.15, com sementes fixas. Foram usadas 10 instâncias para cada $n \in \{10,15,20,25,30\}$ e um caso-base com $n=25$. Cada metaheurística recebeu 20\,000 avaliações e 30 execuções independentes por instância. A calibração (\textit{tenure} $\in\{3,5,10,20\}$ $\times$ 0, 2 ou 5 vizinhos aleatórios; 3 instâncias de $n=20$ com sementes distintas das de teste, 5 execuções) escolheu \textit{tenure} 20 e 5 vizinhos (ARPD de 0,84\%); valores maiores (\textit{tenure} 40 e 80, e reinício após 40 ou 300 iterações), testados à parte nas mesmas instâncias com 8 execuções, não melhoraram (ARPD de 1,68\% a 1,94\%, contra 1,70\% do \textit{tenure} 20 e 1,65\% do SA). O ARPD de cada resultado é medido contra o menor $C_{\max}$ obtido por qualquer método na instância. Validou-se o procedimento em benchmarks (\autoref{tab:bench}), com instâncias de \citeonline{fisher1963probabilistic} e \citeonline{taillard1993benchmarks} obtidas em~\cite{jsplib}: o CP-SAT reproduz os ótimos conhecidos, e a Busca Tabu fica 4,0\% e 5,0\% acima em ft10 e ta01.
+
+\begin{table}[htb]
+    \centering
+    \caption{\label{tab:bench} Benchmarks: ótimo conhecido, CP-SAT e Busca Tabu (10 execuções).}
+    \footnotesize
+    \begin{tabular}{lccccc}
+        \toprule
+        Instância & Ótimo & CP-SAT (status, s) & Tabu melhor & Tabu média & Gap melhor (\%) \\
+        \midrule
+        ft06 (6$\times$6) & 55 & OPTIMAL, 0,0 & 55 & 55,0 & 0,00 \\
+        ft10 (10$\times$10) & 930 & OPTIMAL, 2,4 & 967 & 968,7 & 3,98 \\
+        ta01 (15$\times$15) & 1231 & OPTIMAL, 5,5 & 1293 & 1318,9 & 5,04 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Comparação de métodos.} O CP-SAT provou o ótimo em 37 das 50 instâncias (10, 5, 5, 8 e 9 para $n$ = 10 a 30); nas demais o gap médio foi de no máximo 1,5\% por tamanho. A \autoref{tab:arpd} e a \autoref{fig:boxplot} mostram que SA e Busca Tabu ficam a 2,6\% e 3,1\% do melhor valor conhecido em média, contra 12,2\% do FIFO atual, 8,4\% do SPT e 20,4\% do MWKR. Entre as metaheurísticas as diferenças são pequenas e não há vencedora clara: o SA é melhor em $n=25$ e $n=30$, e a vizinhança do caminho crítico não superou a aleatória (\textit{Tabu-ale}) na média. Em testes preliminares com poucas execuções a vizinhança nova parecia melhor; com 30 execuções em 10 instâncias por tamanho, a vantagem desaparece.
+
+\begin{table}[htb]
+    \centering
+    \caption{\label{tab:arpd} ARPD médio (\%) por tamanho da instância (EDD igual a FIFO).}
+    \footnotesize
+    \begin{tabular}{lccccc}
+        \toprule
+        Método & $n=10$ & $n=15$ & $n=20$ & $n=25$ & $n=30$ \\
+        \midrule
+        FIFO (ANTES) & 11,85 & 14,31 & 13,51 & 11,85 & 9,40 \\
+        SPT & 11,10 & 12,02 & 8,20 & 5,86 & 4,87 \\
+        MWKR & 16,74 & 22,41 & 20,30 & 23,45 & 19,17 \\
+        \textit{Simulated Annealing} & 1,40 & 2,88 & 3,41 & 3,14 & 2,29 \\
+        Busca Tabu & 1,48 & 3,30 & 3,52 & 3,70 & 3,36 \\
+        Tabu-ale & 1,31 & 3,20 & 3,25 & 3,82 & 3,09 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+    \centering
+    \caption{\label{fig:boxplot} ARPD (\%) por método em todas as instâncias (execuções das metaheurísticas e valor das regras por instância).}
+    \includegraphics[width=0.62\textwidth]{figuras/boxplot_arpd.png}
+\end{figure}
+
+\textbf{Caso-base (ANTES $\times$ DEPOIS).} No caso-base ($n=25$, 126 operações), o CP-SAT provou o ótimo de 4588 min em 3,4 s, contra 4925 min do FIFO: redução de 6,8\% no \textit{makespan}. A melhor Busca Tabu atingiu 4620 min (6,2\%) e o SA, 4601 min (6,6\%); em 30 execuções, as médias foram 4697,1 (desvio 31,5) e 4668,8 (desvio 49,5). A \autoref{fig:gantt} mostra o cronograma, com a montagem como gargalo. A utilização média das estações sobe de 47,5\% para 51,0\%. Ela é baixa porque a montagem concentra a carga (9,4 dias contra 4,9 de média); a faixa de 75--90\% inicialmente prevista não foi atingida com as premissas da \autoref{tab:premissas}.
+
+\begin{figure}[!htbp]
+    \centering
+    \caption{\label{fig:gantt} Caso-base: cronograma ANTES (FIFO simulado) e DEPOIS (ótimo do CP-SAT), no mesmo eixo de tempo.}
+    \includegraphics[width=\textwidth]{figuras/gantt_antes_depois.png}
+\end{figure}
+
+\textbf{Medidas secundárias e sensibilidade.} Minimizar o \textit{makespan} não minimiza a tardança: no caso-base o FIFO (que prioriza urgentes) teve $\sum T_j = 192$ min e 2 ordens atrasadas, contra 2536 min e 2 atrasadas no ótimo do CP-SAT; a Busca Tabu obteve 466 min e 1 atrasada. A \autoref{tab:sens} varia os tempos em $\pm 20\%$ e a proporção de urgentes (5 instâncias de $n=25$, 5 execuções): o ganho médio da Busca Tabu sobre o FIFO ficou entre 4,7\% e 5,7\%, estável nas variantes.
+
+\begin{table}[htb]
+    \centering
+    \caption{\label{tab:sens} Sensibilidade: $C_{\max}$ médio (min) e ganho da Busca Tabu sobre o FIFO.}
+    \footnotesize
+    \begin{tabular}{lcccc}
+        \toprule
+        Variante & FIFO & Busca Tabu & CP-SAT & Ganho (\%) \\
+        \midrule
+        Base & 6621,4 & 6307,2 & 6125,2 & 4,88 \\
+        Tempos $-20\%$ & 5296,6 & 5044,5 & 4929,4 & 4,91 \\
+        Tempos $+20\%$ & 7945,2 & 7583,8 & 7407,8 & 4,71 \\
+        Urgentes 10\% & 6912,4 & 6523,3 & 6373,8 & 5,71 \\
+        Urgentes 30\% & 6771,0 & 6437,5 & 6282,0 & 4,90 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Conclusões}
+
+O sequenciamento de mostruários foi modelado como \textit{job shop} com roteiros variáveis e resolvido por um modelo exato e por metaheurísticas. O CP-SAT provou a otimalidade em 37 das 50 instâncias (e no caso-base), de modo que ``ótimo'' vale apenas nesses casos; nas 13 restantes, o resultado é a melhor solução encontrada, com gap médio de até 1,5\%. Frente à prática atual simulada (FIFO com prioridade a urgentes), as metaheurísticas ficam a cerca de 3\% do melhor valor conhecido, e o FIFO, a 12\%. No caso-base, o ótimo reduz o \textit{makespan} em 6,8\% e o ganho da Busca Tabu sobre o FIFO ficou próximo de 5\% nas variações de sensibilidade.
+
+A Busca Tabu com vizinhança do caminho crítico não foi superior ao \textit{Simulated Annealing} nem à Tabu com vizinhança aleatória; o ponto de partida pela melhor regra de despacho contribuiu mais para a qualidade final. Em benchmarks de dimensão maior (ft10, ta01), ela ainda fica a 4--5\% do ótimo.
+
+Limitações: o ANTES é uma simulação da prática empírica, não um registro real; as instâncias são geradas a partir das premissas do estudo, com lotes e ruído sorteados, e não de registros diários de produção (\autoref{tab:premissas}); não há \textit{setups}, quebras nem chegadas escalonadas; e a otimização do \textit{makespan} piorou a tardança em alguns casos. Trabalhos futuros: objetivo combinado com tardança, vizinhança mais forte (por exemplo, N6 de Nowicki e Smutnicki) e dados reais de produção.

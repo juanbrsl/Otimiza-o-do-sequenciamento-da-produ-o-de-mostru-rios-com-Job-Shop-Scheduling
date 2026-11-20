@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Otimização do Sequenciamento da Produção de Mostruários com Job Shop Scheduling</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+@page{size:A4;margin:3cm}
+html{font-family:"Times New Roman",Times,serif;font-size:12pt}
+body{margin:0;line-height:1.5;text-align:justify}
+p{margin:0 0 .2cm;text-indent:1.3cm}
+h2{font-size:12pt;text-transform:uppercase;margin:.5cm 0 .2cm;font-weight:bold;text-align:left}
+.cover{height:23.5cm;text-align:center;page-break-after:always;display:flex;flex-direction:column;justify-content:space-between;font-size:14pt;line-height:1.4}
+.cover h1{font-size:19pt;font-variant:small-caps;margin:0}
+.cover .t{font-size:16pt;font-variant:small-caps}
+.resumo{page-break-after:always}.resumo h2{text-align:center;margin:1em 0}
+.resumo p{text-indent:0;line-height:1.2}
+table{border-collapse:collapse;margin:.2cm auto;font-size:10pt;line-height:1.25}
+th,td{padding:2px 8px;text-align:center}
+thead tr{border-top:1.5px solid #000;border-bottom:1px solid #000}tbody tr:last-child{border-bottom:1.5px solid #000}
+th:first-child,td:first-child{text-align:left}
+figure{margin:.2cm 0;text-align:center;break-inside:avoid}figure img{max-width:100%}
+figcaption,.cap{font-size:10pt;line-height:1.25;text-align:center;margin:.1cm 0}
+.eq{text-align:center;text-indent:0;margin:.1cm 0}
+ol.ref{font-size:11pt;line-height:1.25;text-align:left;padding-left:1.2cm}ol.ref li{margin-bottom:.15cm}
+</style></head><body>
+
+<div class="cover">
+<div>CURSO DE ENGENHARIA DE PRODUÇÃO<br>PESQUISA OPERACIONAL II<br>PROFESSOR: BRUNO DE ATHAYDE PRATA</div>
+<div><h1>Relatório</h1><br><div class="t">Otimização do Sequenciamento da Produção de Mostruários com Job Shop Scheduling</div></div>
+<div>Juan de Oliveira Brasil — 571942</div>
+<div style="font-size:12pt">Fortaleza, Novembro de 2026</div>
+</div>
+
+<div class="resumo">
+<h2>Resumo</h2>
+<p>Ordens de produção de mostruários percorrem seis estações com roteiros distintos e hoje são sequenciadas de forma empírica. O problema é modelado como Job Shop Scheduling com roteiros variáveis e minimização do makespan. Comparam-se um modelo exato (CP-SAT), Busca Tabu, <i>Simulated Annealing</i> e regras de despacho, em 50 instâncias de 10 a 30 ordens. O CP-SAT provou o ótimo em 37 das 50 instâncias; as metaheurísticas ficaram em média 2,6% a 3,1% acima do melhor valor conhecido, contra 12,2% do sequenciamento atual simulado (FIFO). No caso-base, o ótimo reduz o makespan em 6,8%.</p>
+<p style="margin-top:.4cm"><b>Palavras-chave</b>: Job Shop. Makespan. Busca Tabu. CP-SAT. Mostruários.</p>
+<h2 style="margin-top:1.2cm">Abstract</h2>
+<p lang="en">Production orders for sample displays go through six workstations with different routings and are currently sequenced empirically. The problem is modeled as a Job Shop Scheduling Problem with variable routings, minimizing the makespan. An exact CP-SAT model, Tabu Search, Simulated Annealing and dispatching rules are compared on 50 instances with 10 to 30 orders. CP-SAT proved optimality in 37 of the 50 instances; the metaheuristics were on average 2.6% to 3.1% above the best known value, against 12.2% for the simulated current practice (FIFO). In the base case, the optimal schedule reduces the makespan by 6.8%.</p>
+<p style="margin-top:.4cm"><b>Keywords</b>: Job Shop. Makespan. Tabu Search. CP-SAT. Sample displays.</p>
+</div>
+
+<h2>1 Definição do problema</h2>
+<p>O ambiente em estudo é uma fábrica de mostruários de pequeno porte (tecidos, madeira, couro sintético, kits e itens sob medida), com seis estações de uma máquina cada, em turno único de 480 min/dia: corte (M0), personalização (M1), colagem/prensagem (M2), costura/acabamento (M3), montagem (M4) e conferência/embalagem (M5). Cada ordem é um <i>job</i> com roteiro próprio: a família F1 (45%) visita M0–M5; F2 (25%), M0, M2, M3, M1, M4, M5; F3 (15%), M0, M3, M4, M5; e F4 (15%), M0, M4, M1, M5. Como as ordens pulam etapas e as percorrem em ordens diferentes, trata-se de um <i>job shop</i> e não de um <i>flow shop</i>.</p>
+<p>Cada operação exige uma estação por vez, sem preempção, e respeita a precedência do roteiro. O tempo é \(p_{jk}=(a_i+b_i q_j)\,\varepsilon\), com \(q_j\in\{15,25,50,100,150\}\) o tamanho do lote, \(a_i\) e \(b_i\) os tempos fixo e unitário da estação \(i\) e \(\varepsilon\) um ruído log-normal de 10%. O prazo é de 10 dias úteis, ou 5 para 20% das ordens urgentes. Não há <i>setups</i> sequenciais nem quebras. As instâncias foram geradas por um gerador parametrizado e reprodutível (semente fixa), com as premissas da Tabela 1; o backlog da estação gargalo (montagem) varia de 2,6 a 16,4 dias úteis nas 50 instâncias.</p>
+<div class="cap"><b>Tabela 1</b> – Premissas do gerador. Tempo = fixo + unitário × lote (min).</div>
+<table><thead><tr><th>Estação</th><th>M0</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th></tr></thead>
+<tbody><tr><td>Fixo / unitário</td><td>20/1,5</td><td>30/2,0</td><td>15/1,8</td><td>10/3,5</td><td>10/4,0</td><td>10/1,0</td></tr></tbody></table>
+<p>A medida de desempenho principal é o <i>makespan</i> \(C_{\max}\). Reportam-se também a tardança total \(\sum T_j\), o número de ordens atrasadas e a utilização por estação; \(\sum T_j\) serve de desempate lexicográfico (\(C_{\max}\) primeiro). O problema é NP-difícil no sentido forte, já para três estações [1], e o espaço de busca de uma instância com \(N\) operações tem até \(N!/\prod_j |r_j|!\) sequências. O sequenciamento atual é empírico; sem registros da fábrica, ele é representado por uma simulação: cada estação atende sua fila em FIFO, com prioridade a urgentes (ANTES). O DEPOIS é a melhor sequência obtida pelos métodos propostos.</p>
+
+<h2>2 Método proposto</h2>
+<p><b>Representação e decodificador.</b> Uma solução é uma permutação com repetição em que o <i>job</i> \(j\) aparece \(|r_j|\) vezes e a \(k\)-ésima ocorrência indica sua \(k\)-ésima operação. O decodificador semi-ativo inicia cada operação assim que o <i>job</i> e a estação estão livres, o que respeita as precedências por construção. Como o formato do <code>scheptk</code> exige que todo <i>job</i> visite todas as máquinas, foi implementado um decodificador próprio para roteiros variáveis, validado contra o <code>scheptk</code> em instâncias de rota completa (mesmo \(C_{\max}\) e \(\sum T_j\) em 25 sequências aleatórias).</p>
+<p><b>Modelo exato.</b> O modelo CP-SAT [2] usa uma variável de início \(S_{jk}\) e um intervalo de duração \(p_{jk}\) por operação:</p>
+<div class="eq">\[\begin{aligned}\min\ & C_{\max}\\ \text{s.a.}\ & S_{j,k+1}\ge S_{jk}+p_{jk}\\ & \mathrm{NoOverlap}\big(\{[S_{jk},S_{jk}+p_{jk})\}_{r_{jk}=i}\big)\ \ \forall i\\ & C_{\max}\ge S_{j,|r_j|}+p_{j,|r_j|}\end{aligned}\tag{1}\]</div>
+<p>O limite de tempo foi de 30 s com 8 <i>threads</i>. O <i>solver</i> informa o <i>status</i> (OPTIMAL ou FEASIBLE) e o melhor limite inferior, do qual se calcula o gap. O título “ótimo” só vale onde o <i>status</i> foi OPTIMAL.</p>
+<p><b>Busca Tabu.</b> Segue a ideia de Glover [3,4], com vizinhança baseada no caminho crítico, como em Nowicki e Smutnicki [5]: a cada iteração calcula-se o caminho crítico e geram-se vizinhos que invertem a ordem de duas operações consecutivas na mesma estação, mantidas as precedências dos <i>jobs</i>; somam-se 5 vizinhos aleatórios (troca ou inserção) para diversificar. A solução corrente move-se sempre para o melhor vizinho admissível, mesmo pior. A lista tabu guarda o atributo “par de operações na ordem anterior”, com <i>tenure</i> 20; a aspiração aceita um vizinho tabu que melhore o melhor global. Após 100 iterações sem melhora, reinicia-se de uma perturbação da melhor solução. A solução inicial é a melhor entre as regras de despacho. A variante <i>Tabu-ale</i>, só com vizinhos aleatórios (<i>tenure</i> 3, 10 vizinhos), foi mantida como referência.</p>
+<p><b>Outros métodos.</b> O <i>Simulated Annealing</i> usa as mesmas vizinhanças aleatórias, resfriamento geométrico e o mesmo ponto de partida e orçamento. As regras de despacho sem espera são FIFO (com urgentes primeiro), SPT, EDD e MWKR (maior trabalho restante) [6]. EDD coincide com FIFO porque só há dois prazos distintos e os urgentes já passam na frente.</p>
+
+<h2>3 Análise e discussão dos resultados</h2>
+<p><b>Configuração experimental.</b> Os experimentos rodaram em Windows 11, CPU Intel com 20 núcleos lógicos, 15,7 GB de RAM, Python 3.14.6 e OR-Tools 9.15, com sementes fixas. Foram usadas 10 instâncias para cada \(n\in\{10,15,20,25,30\}\) e um caso-base com \(n=25\). Cada metaheurística recebeu 20 000 avaliações e 30 execuções independentes por instância. A calibração (<i>tenure</i> ∈ {3,5,10,20} × 0, 2 ou 5 vizinhos aleatórios; 3 instâncias de \(n=20\) com sementes distintas das de teste, 5 execuções) escolheu <i>tenure</i> 20 e 5 vizinhos (ARPD de 0,84%); valores maiores (<i>tenure</i> 40 e 80, e reinício após 40 ou 300 iterações), testados à parte nas mesmas instâncias com 8 execuções, não melhoraram (ARPD de 1,68% a 1,94%, contra 1,70% do <i>tenure</i> 20 e 1,65% do SA). O ARPD de cada resultado é medido contra o menor \(C_{\max}\) obtido por qualquer método na instância. Validou-se o procedimento em benchmarks (Tabela 2), com instâncias de Fisher e Thompson [7] e Taillard [8] obtidas em [9]: o CP-SAT reproduz os ótimos conhecidos, e a Busca Tabu fica 4,0% e 5,0% acima em ft10 e ta01.</p>
+<div class="cap"><b>Tabela 2</b> – Benchmarks: ótimo conhecido, CP-SAT e Busca Tabu (10 execuções).</div>
+<table><thead><tr><th>Instância</th><th>Ótimo</th><th>CP-SAT (status, s)</th><th>Tabu melhor</th><th>Tabu média</th><th>Gap melhor (%)</th></tr></thead><tbody>
+<tr><td>ft06 (6×6)</td><td>55</td><td>OPTIMAL, 0,0</td><td>55</td><td>55,0</td><td>0,00</td></tr>
+<tr><td>ft10 (10×10)</td><td>930</td><td>OPTIMAL, 2,4</td><td>967</td><td>968,7</td><td>3,98</td></tr>
+<tr><td>ta01 (15×15)</td><td>1231</td><td>OPTIMAL, 5,5</td><td>1293</td><td>1318,9</td><td>5,04</td></tr></tbody></table>
+<p><b>Comparação de métodos.</b> O CP-SAT provou o ótimo em 37 das 50 instâncias (10, 5, 5, 8 e 9 para \(n\) = 10 a 30); nas demais o gap médio foi de no máximo 1,5% por tamanho. A Tabela 3 e a Figura 1 mostram que SA e Busca Tabu ficam a 2,6% e 3,1% do melhor valor conhecido em média, contra 12,2% do FIFO atual, 8,4% do SPT e 20,4% do MWKR. Entre as metaheurísticas as diferenças são pequenas e não há vencedora clara: o SA é melhor em \(n=25\) e \(n=30\), e a vizinhança do caminho crítico não superou a aleatória (<i>Tabu-ale</i>) na média. Em testes preliminares com poucas execuções a vizinhança nova parecia melhor; com 30 execuções em 10 instâncias por tamanho, a vantagem desaparece.</p>
+<div class="cap"><b>Tabela 3</b> – ARPD médio (%) por tamanho da instância (EDD igual a FIFO).</div>
+<table><thead><tr><th>Método</th><th>n=10</th><th>n=15</th><th>n=20</th><th>n=25</th><th>n=30</th></tr></thead><tbody>
+<tr><td>FIFO (ANTES)</td><td>11,85</td><td>14,31</td><td>13,51</td><td>11,85</td><td>9,40</td></tr>
+<tr><td>SPT</td><td>11,10</td><td>12,02</td><td>8,20</td><td>5,86</td><td>4,87</td></tr>
+<tr><td>MWKR</td><td>16,74</td><td>22,41</td><td>20,30</td><td>23,45</td><td>19,17</td></tr>
+<tr><td><i>Simulated Annealing</i></td><td>1,40</td><td>2,88</td><td>3,41</td><td>3,14</td><td>2,29</td></tr>
+<tr><td>Busca Tabu</td><td>1,48</td><td>3,30</td><td>3,52</td><td>3,70</td><td>3,36</td></tr>
+<tr><td>Tabu-ale</td><td>1,31</td><td>3,20</td><td>3,25</td><td>3,82</td><td>3,09</td></tr></tbody></table>
+<figure><img src="figuras/boxplot_arpd.png" style="width:9.5cm"><figcaption><b>Figura 1</b> – ARPD (%) por método em todas as instâncias (execuções das metaheurísticas e valor das regras por instância).</figcaption></figure>
+<p><b>Caso-base (ANTES × DEPOIS).</b> No caso-base (\(n=25\), 126 operações), o CP-SAT provou o ótimo de 4588 min em 3,4 s, contra 4925 min do FIFO: redução de 6,8% no <i>makespan</i>. A melhor Busca Tabu atingiu 4620 min (6,2%) e o SA, 4601 min (6,6%); em 30 execuções, as médias foram 4697,1 (desvio 31,5) e 4668,8 (desvio 49,5). A Figura 2 mostra o cronograma, com a montagem como gargalo. A utilização média das estações sobe de 47,5% para 51,0%. Ela é baixa porque a montagem concentra a carga (9,4 dias contra 4,9 de média); a faixa de 75–90% inicialmente prevista não foi atingida com as premissas da Tabela 1.</p>
+<figure><img src="figuras/gantt_antes_depois.png" style="width:100%"><figcaption><b>Figura 2</b> – Caso-base: cronograma ANTES (FIFO simulado) e DEPOIS (ótimo do CP-SAT), no mesmo eixo de tempo.</figcaption></figure>
+<p><b>Medidas secundárias e sensibilidade.</b> Minimizar o <i>makespan</i> não minimiza a tardança: no caso-base o FIFO (que prioriza urgentes) teve \(\sum T_j=192\) min e 2 ordens atrasadas, contra 2536 min e 2 atrasadas no ótimo do CP-SAT; a Busca Tabu obteve 466 min e 1 atrasada. A Tabela 4 varia os tempos em ±20% e a proporção de urgentes (5 instâncias de \(n=25\), 5 execuções): o ganho médio da Busca Tabu sobre o FIFO ficou entre 4,7% e 5,7%, estável nas variantes.</p>
+<div class="cap"><b>Tabela 4</b> – Sensibilidade: \(C_{\max}\) médio (min) e ganho da Busca Tabu sobre o FIFO.</div>
+<table><thead><tr><th>Variante</th><th>FIFO</th><th>Busca Tabu</th><th>CP-SAT</th><th>Ganho (%)</th></tr></thead><tbody>
+<tr><td>Base</td><td>6621,4</td><td>6307,2</td><td>6125,2</td><td>4,88</td></tr>
+<tr><td>Tempos −20%</td><td>5296,6</td><td>5044,5</td><td>4929,4</td><td>4,91</td></tr>
+<tr><td>Tempos +20%</td><td>7945,2</td><td>7583,8</td><td>7407,8</td><td>4,71</td></tr>
+<tr><td>Urgentes 10%</td><td>6912,4</td><td>6523,3</td><td>6373,8</td><td>5,71</td></tr>
+<tr><td>Urgentes 30%</td><td>6771,0</td><td>6437,5</td><td>6282,0</td><td>4,90</td></tr></tbody></table>
+
+<h2>4 Conclusões</h2>
+<p>O sequenciamento de mostruários foi modelado como <i>job shop</i> com roteiros variáveis e resolvido por um modelo exato e por metaheurísticas. O CP-SAT provou a otimalidade em 37 das 50 instâncias (e no caso-base), de modo que “ótimo” vale apenas nesses casos; nas 13 restantes, o resultado é a melhor solução encontrada, com gap médio de até 1,5%. Frente à prática atual simulada (FIFO com prioridade a urgentes), as metaheurísticas ficam a cerca de 3% do melhor valor conhecido, e o FIFO, a 12%. No caso-base, o ótimo reduz o <i>makespan</i> em 6,8% e o ganho da Busca Tabu sobre o FIFO ficou próximo de 5% nas variações de sensibilidade.</p>
+<p>A Busca Tabu com vizinhança do caminho crítico não foi superior ao <i>Simulated Annealing</i> nem à Tabu com vizinhança aleatória; o ponto de partida pela melhor regra de despacho contribuiu mais para a qualidade final. Em benchmarks de dimensão maior (ft10, ta01), ela ainda fica a 4–5% do ótimo.</p>
+<p>Limitações: o ANTES é uma simulação da prática empírica, não um registro real; as instâncias são geradas a partir das premissas do estudo, com lotes e ruído sorteados, e não de registros diários de produção (Tabela 1); não há <i>setups</i>, quebras nem chegadas escalonadas; e a otimização do <i>makespan</i> piorou a tardança em alguns casos. Trabalhos futuros: objetivo combinado com tardança, vizinhança mais forte (por exemplo, N6 de Nowicki e Smutnicki) e dados reais de produção.</p>
+
+<h2 style="page-break-before:auto">Referências</h2>
+<ol class="ref">
+<li>GAREY, M. R.; JOHNSON, D. S.; SETHI, R. The complexity of flowshop and jobshop scheduling. <b>Mathematics of Operations Research</b>, v. 1, n. 2, p. 117–129, 1976.</li>
+<li>GOOGLE. <b>OR-Tools: CP-SAT solver</b>. Disponível em: https://developers.google.com/optimization/cp/cp_solver. Acesso em: 9 nov. 2026.</li>
+<li>GLOVER, F. Tabu search — Part I. <b>ORSA Journal on Computing</b>, v. 1, n. 3, p. 190–206, 1989.</li>
+<li>GLOVER, F. Tabu search — Part II. <b>ORSA Journal on Computing</b>, v. 2, n. 1, p. 4–32, 1990.</li>
+<li>NOWICKI, E.; SMUTNICKI, C. A fast taboo search algorithm for the job shop problem. <b>Management Science</b>, v. 42, n. 6, p. 797–813, 1996.</li>
+<li>PINEDO, M. L. <b>Scheduling: theory, algorithms, and systems</b>. 5. ed. Cham: Springer, 2016.</li>
+<li>FISHER, H.; THOMPSON, G. L. Probabilistic learning combinations of local job-shop scheduling rules. In: MUTH, J. F.; THOMPSON, G. L. (ed.). <b>Industrial scheduling</b>. Englewood Cliffs: Prentice-Hall, 1963.</li>
+<li>TAILLARD, E. Benchmarks for basic scheduling problems. <b>European Journal of Operational Research</b>, v. 64, n. 2, p. 278–285, 1993.</li>
+<li>TAMY0612. <b>JSPLIB: job shop scheduling benchmark instances</b>. Disponível em: https://github.com/tamy0612/JSPLIB. Acesso em: 9 nov. 2026.</li>
+</ol>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{renderMathInElement(document.body,{delimiters:[{left:"\\[",right:"\\]",display:true},{left:"\\(",right:"\\)",display:false}],throwOnError:false});document.title+=" ";document.body.setAttribute("data-ready","1")});
+</script>
+</body></html>

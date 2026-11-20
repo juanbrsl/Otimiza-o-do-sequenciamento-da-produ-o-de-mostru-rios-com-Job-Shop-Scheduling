@@ -1,0 +1,4 @@
+instancia,n_x_m,otimo_conhecido,cpsat_status,cpsat_cmax,cpsat_s,tabu_melhor,tabu_media,tabu_gap_%
+ft06,6x6,55,OPTIMAL,55,0.0,55,55.0,0.0
+ft10,10x10,930,OPTIMAL,930,2.4,967,968.7,3.98
+ta01,15x15,1231,OPTIMAL,1231,5.5,1293,1318.9,5.04
